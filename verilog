@@ -10,21 +10,21 @@ module full_adder(sum, cout, a, b, cin);
 endmodule
 
 module add16_rc(sum16, cout, a16, b16, cin);
-  	input [15:0]a16;
-  	input [15:0]b16; 
-    input cin;
-  	output [15:0]sum16;
-  	output cout;
-  	wire [16:0]myarr;
-  	full_adder fa(sum16[0], myarr[0], a16[0], b16[0],cin);
-    genvar i;
-    generate for(i=0;i<16;i=i+1)
-      	begin: sum_loop
-          	//assign cin=cout;
-          full_adder fa2(sum16[i],myarr[i+1],a16[i],b16[i],myarr[i]);
-      	end
-    endgenerate
-  	cout=myarr[16];
+	input [15:0]a16;
+	input [15:0]b16; 
+	input cin;
+	output [15:0]sum16;
+	output cout;
+	wire [16:0]myarr;
+	full_adder fa(sum16[0], myarr[0], a16[0], b16[0],cin);
+	genvar i;
+	generate for(i=0;i<16;i=i+1)
+	begin: sum_loop
+		//assign cin=cout;
+	  full_adder fa2(sum16[i],myarr[i+1],a16[i],b16[i],myarr[i]);
+	end
+	endgenerate
+	cout=myarr[16];
 endmodule
   
 module full_adder_pg(sum, cout, p, g, a, b, cin);
