@@ -1,0 +1,121 @@
+module full_adder(sum, cout, a, b, cin);
+	input a,b,cin;
+	output sum,cout;
+  	xor #4 xor1(sum,a,b,cin);
+  	wire w1,w2,w3;
+    and #1 and1(w1,a,b);
+  	and #1 and2(w2,b,cin);
+  	and #1 and3(w3,cin,a);
+    or #2 or1(cout,w1,w2,w3);
+endmodule
+
+module add16_rc(sum16, cout, a16, b16, cin);
+  	input [15:0]a16;
+  	input [15:0]b16; 
+    input cin;
+  	output [15:0]sum16;
+  	output cout;
+  	wire [16:0]myarr;
+  	full_adder fa(sum16[0], myarr[0], a16[0], b16[0],cin);
+    genvar i;
+    generate for(i=0;i<16;i=i+1)
+      	begin: sum_loop
+          	//assign cin=cout;
+          full_adder fa2(sum16[i],myarr[i+1],a16[i],b16[i],myarr[i]);
+      	end
+    endgenerate
+  	cout=myarr[16];
+endmodule
+  
+module full_adder_pg(sum, cout, p, g, a, b, cin);
+	output sum,cout,p,g;
+  	input a,b,cin;
+  	xor #4 xor2(sum,a,b,cin);
+  	wire w1,w2,w3;
+    and #1 and1(w1,a,b);
+  	and #1 and2(w2,b,cin);
+  	and #1 and3(w3,cin,a);
+    or #2 or1(cout,w1,w2,w3);
+    and #1 and4(g,a,b);
+    or #1 or2(p,a,b);
+endmodule
+  
+module  carry_generator(couts, p, g, cin);
+  input [3:0]p;
+  input [3:0]g;
+  input cin;
+  output [4:1]couts;
+  wire w1,w2,w3,w4,w5,w6,w7,w8,w9,w10;
+	//forc1
+  and #1 and1(w1,p[0],cin);
+  or #1 or1(couts[1],g[0],w1);
+  //for c2
+  and #1 and2(w2,p[1],g[0]);
+  and #2 and3(w3,p[1],p[0],cin);
+  or #2 or2(couts[2],g[1],w2,w3);
+  //for c3
+  and #1 and4(w4,p[2],g[1]);
+  and #2 and5(w5,p[2],p[1],g[0]);
+  and #2 and6(w6,p[2],p[1],p[0],cin);
+  or #2 or3(couts[3],g[2],w4,w5,w6);
+  //for c4
+  and #1 and7(w7,p[3],g[2]);
+  and #2 and8(w8,p[3],p[2],g[1]);
+  and #2 and9(w9,p[3],p[2],p[1],g[0]);
+  and #3 and10(w10,p[3],p[2],p[1],p[0],cin);
+  or #2 or4(couts[4],w7,w8,w9,w10);
+endmodule
+  
+module add4_cla(sum4, cout, a4, b4, cin);
+  input [3:0]a4;
+  input [3:0]b4;
+  input cin;
+  output [3:0]sum4;
+  output cout;
+  wire [4:1]carry;
+  wire [3:0]p;
+  wire [3:0]g;
+  full_adder_pg adder1(.p(p[0]),.g(g[0]),.a(a4[0]),.b(b4[0]),.cin(cin));
+    
+  full_adder_pg adder2(.p(p[1]),.g(g[1]),.a(a4[1]),.b(b4[1]),.cin(cin));
+    
+  full_adder_pg adder3(.p(p[2]),.g(g[2]),.a(a4[2]),.b(b4[2]),.cin(cin));
+    
+  full_adder_pg adder4(.p(p[3]),.g(g[3]),.a(a4[3]),.b(b4[3]),.cin(cin));
+  carry_generator carries3(.couts(carry),.p(p),.g(g),.cin(cin));
+  
+  xor #4 xor3(sum4[0],p[0],cin);
+  xor #4 xor3(sum4[1],p[1],carry[1]);
+  xor #4 xor3(sum4[2],p[2],carry[2]);
+  xor #4 xor3(sum4[3],p[3],carry[3]);
+  assign cout=carry[4];
+endmodule
+  
+  
+  
+module add16_cla(sum16, cout, a16, b16, cin);
+  input [15:0]a16;
+  input [15:0]b16;
+  input cin;
+  output [15:0]sum16;
+  output cout;
+  wire [4:0]couts;
+  wire [3:0]pgens;
+  wire [3:0]ggens;
+  //module  carry_generator(4couts, 4p, 4g, 1cin);
+  //module add4_cla(sum4, cout, a4, b4, cin);
+  assign couts[0]=cin;
+  //add4_cla cla1(.sum4(sum16[3:0]),.cout(couts[0]).a4([3:0]a16),.b4([0:3]b16),.cin(cin));
+  //carry_generator(.couts(),.p(),.g(),.cin(cin));
+  carry_generator car2(.couts(),.p(pgens),.g(ggens),.cin(couts[i]));
+  genvar i;
+  generate for(i=0;i<4;i=i+1)
+    begin: my_loop
+      add4_cla 	
+            mycla cl2 (.sum4([4*i+3:4*i]sum16),.cout(couts[i+1]),.a4([4*i+3:4*i]a16),.b4([4*i+3:4*i]b16));
+      
+    end
+  endgenerate
+  assign cout=carries[3];
+  
+endmodule
